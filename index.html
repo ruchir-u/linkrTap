@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LinkrTap</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace" aria-label="LinkrTap workspace">
+        <div class="editor-panel">
+          <div class="brand-row">
+            <div class="brand-mark">L</div>
+            <div>
+              <p class="eyebrow">LinkrTap</p>
+              <h1>Business page builder</h1>
+            </div>
+          </div>
+
+          <form id="businessForm" class="editor-form">
+            <label>
+              Business name
+              <input id="nameInput" type="text" value="Cafe Aroma" />
+            </label>
+
+            <label>
+              Short description
+              <textarea id="descriptionInput" rows="3">Fresh coffee, warm plates, and a calm corner for everyday meetings.</textarea>
+            </label>
+
+            <div class="field-grid">
+              <label>
+                Rating
+                <input id="ratingInput" type="text" value="4.8" />
+              </label>
+              <label>
+                City
+                <input id="cityInput" type="text" value="Pune" />
+              </label>
+            </div>
+
+            <label>
+              Logo initials
+              <input id="initialsInput" type="text" value="CA" maxlength="3" />
+            </label>
+
+            <label>
+              Logo image
+              <input id="logoInput" type="file" accept="image/png,image/jpeg" />
+            </label>
+
+            <label>
+              Google review link
+              <input id="reviewInput" type="url" value="https://google.com" />
+            </label>
+
+            <label>
+              Instagram link
+              <input id="instagramInput" type="url" value="https://instagram.com" />
+            </label>
+
+            <label>
+              WhatsApp link
+              <input id="whatsappInput" type="url" value="https://wa.me/919876543210" />
+            </label>
+
+            <label>
+              Menu link
+              <input id="menuInput" type="url" value="https://example.com/menu" />
+            </label>
+
+            <label>
+              Website link
+              <input id="websiteInput" type="url" value="https://example.com" />
+            </label>
+
+            <label>
+              Directions link
+              <input id="directionsInput" type="url" value="https://maps.google.com" />
+            </label>
+
+            <label>
+              Phone number
+              <input id="phoneInput" type="tel" value="+91 98765 43210" />
+            </label>
+          </form>
+        </div>
+
+        <section class="preview-zone" aria-label="Business page preview">
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <div class="business-header">
+                <div id="previewLogo" class="business-logo">CA</div>
+                <p id="previewCity" class="business-city">Pune</p>
+                <h2 id="previewName">Cafe Aroma</h2>
+                <p id="previewRating" class="rating">4.8 rating</p>
+                <p id="previewDescription" class="description">Fresh coffee, warm plates, and a calm corner for everyday meetings.</p>
+              </div>
+
+              <div class="action-list">
+                <a id="reviewLink" class="action-button primary" href="https://google.com">Leave Review</a>
+                <a id="instagramLink" class="action-button" href="https://instagram.com">Instagram</a>
+                <a id="whatsappLink" class="action-button" href="https://wa.me/919876543210">WhatsApp</a>
+                <a id="menuLink" class="action-button" href="https://example.com/menu">Menu</a>
+                <a id="websiteLink" class="action-button" href="https://example.com">Website</a>
+                <a id="directionsLink" class="action-button" href="https://maps.google.com">Directions</a>
+                <a id="phoneLink" class="action-button" href="tel:+919876543210">Call</a>
+              </div>
+
+              <p class="powered">Powered by LinkrTap</p>
+            </div>
+          </div>
+
+          <aside class="qr-panel" aria-label="QR preview">
+            <p class="eyebrow">QR preview</p>
+            <img id="qrImage" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https%3A%2F%2Flinkrtap.local%2Fcafe-aroma" alt="QR code preview" />
+            <p id="shortUrl">linkrtap.local/cafe-aroma</p>
+            <button id="downloadQr" class="download-button" type="button">Download QR</button>
+            <p id="downloadStatus" class="download-status" aria-live="polite"></p>
+          </aside>
+        </section>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
