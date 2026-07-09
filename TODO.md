@@ -5,7 +5,7 @@
 - [x] Add logo image support
 - [x] Add QR preview
 - [x] Add QR download button
-- [x] Add database (Vercel KV)
+- [x] Add database (Upstash Redis, via Vercel Marketplace)
 - [x] Add real saved businesses (`POST /api/save`)
 - [x] Add separate public business page routes (`/api/page/[slug]`, rewritten to `/:slug`)
 - [ ] Add logo image upload to real storage (Vercel Blob) — currently local-preview only

@@ -1,4 +1,6 @@
-import { kv } from "@vercel/kv";
+import { Redis } from "@upstash/redis";
+
+const kv = Redis.fromEnv();
 
 function slugify(value) {
   return (

@@ -25,7 +25,7 @@ Open `index.html` in a browser for editor-only, offline use (publishing requires
 ## Deploying
 
 1. `vercel link` (or `vercel` interactively) to create/connect the project.
-2. In the Vercel dashboard: Storage → Create Database → KV → connect it to this project. This sets the `KV_*` env vars automatically (see `.env.example`).
+2. In the Vercel dashboard: Storage → Marketplace Database Providers → **Upstash** → Create → choose Redis, and connect it to this project. This sets the `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` env vars automatically (see `.env.example`). (Vercel's own "KV" product was sunset in Dec 2024 — Upstash is the current standard replacement, same idea.)
 3. For local dev: `vercel env pull .env.local`, then `vercel dev`.
 4. `vercel --prod` to deploy.
 
