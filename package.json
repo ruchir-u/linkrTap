@@ -1,0 +1,9 @@
+{
+  "name": "linkrtap",
+  "private": true,
+  "version": "0.1.0",
+  "description": "LinkrTap - one QR code, one business profile page.",
+  "dependencies": {
+    "@vercel/kv": "^1.0.1"
+  }
+}

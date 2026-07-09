@@ -10,8 +10,28 @@ The first version is intentionally simple:
 - Show customer action buttons
 - Generate a QR preview for the business page URL
 - Download the current QR as a PNG
+- Publish the business to a real, persisted public page
 
-Open `index.html` in a browser to try it.
+Open `index.html` in a browser for editor-only, offline use (publishing requires the Vercel deployment below).
+
+## Architecture
+
+- `index.html` / `styles.css` / `app.js` — the editor + live preview, served as static files.
+- `api/save.js` — `POST` endpoint that validates and saves a business record to Vercel KV, keyed by slug.
+- `api/business/[slug].js` — `GET` endpoint returning a business record as JSON.
+- `api/page/[slug].js` — server-rendered public business page. This is what the QR code actually points to once published.
+- `vercel.json` — rewrites `/:slug` to `/api/page/:slug` so published pages get clean URLs.
+
+## Deploying
+
+1. `vercel link` (or `vercel` interactively) to create/connect the project.
+2. In the Vercel dashboard: Storage → Create Database → KV → connect it to this project. This sets the `KV_*` env vars automatically (see `.env.example`).
+3. For local dev: `vercel env pull .env.local`, then `vercel dev`.
+4. `vercel --prod` to deploy.
+
+Once deployed, hitting "Publish page" in the editor saves the business and points the QR code at the real `https://<your-domain>/<slug>` URL.
+
+**Known gap:** logo image upload is currently local-preview only (a `blob:` URL) and isn't sent to the server. Real image hosting (e.g. Vercel Blob) is the next step — until then, published pages fall back to initials.
 
 ## Product Direction
 

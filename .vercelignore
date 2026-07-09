@@ -1,11 +1,7 @@
+.git/
 .runtime/
 .setup-tools/
 node_modules/
-.vercel/
-*.log
 setup-dev-tools.ps1
 setup-portable-tools.ps1
-
-.vercel
-.env
-.env.local
+*.log

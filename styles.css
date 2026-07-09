@@ -283,6 +283,19 @@ h2 {
   font-weight: 700;
 }
 
+.publish-button {
+  background: var(--accent-dark);
+}
+
+.live-link {
+  display: block;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 800;
+}
+
 @media (max-width: 920px) {
   .workspace,
   .preview-zone {
