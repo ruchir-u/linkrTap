@@ -2,16 +2,22 @@
 
 - [x] Create static MVP webpage
 - [x] Add editable business profile preview
-- [x] Add logo image support
+- [x] Add logo image support (local preview only, not persisted yet)
 - [x] Add QR preview
 - [x] Add QR download button
 - [x] Add database (Upstash Redis, via Vercel Marketplace)
 - [x] Add real saved businesses (`POST /api/save`)
 - [x] Add separate public business page routes (`/api/page/[slug]`, rewritten to `/:slug`)
-- [ ] Add logo image upload to real storage (Vercel Blob) — currently local-preview only
-- [ ] Add admin dashboard (list/edit/delete published businesses)
-- [ ] Track scans
-- [ ] Track button clicks
-- [ ] Add analytics dashboard
-- [ ] Deploy to Vercel (attach KV store, set env vars, `vercel --prod`)
-- [ ] Demo first business
+- [x] Track scans/visits (`/api/scan/[slug]`, total + daily + source + device)
+- [x] Track button clicks (`/api/click/[slug]/[action]`, rate-limited)
+- [x] Add analytics endpoint (`/api/analytics/[slug]`)
+- [x] Move editor behind `/admin`, add password auth (`middleware.js`)
+- [x] Add admin dashboard (`/admin`, lists businesses with quick stats)
+- [x] Add unique-visitor tracking (hashed IP, per-day Redis sets)
+- [x] Add rate limiting + bot filtering on scan/click endpoints
+- [x] Distinguish QR/direct visits from shared-link visits (referrer source)
+- [ ] Add logo image upload to real storage (Vercel Blob)
+- [ ] Add delete/archive flow for businesses in the dashboard
+- [ ] Deploy this version to Vercel (attach Upstash, set ADMIN_PASSWORD, redeploy)
+- [ ] Test end-to-end: log in, publish a business, scan the QR, tap buttons, confirm analytics update
+- [ ] Demo first real business

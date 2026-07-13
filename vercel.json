@@ -1,5 +1,12 @@
 {
+  "cleanUrls": true,
+  "redirects": [
+    { "source": "/", "destination": "/admin", "permanent": false }
+  ],
   "rewrites": [
+    { "source": "/admin", "destination": "/admin/index.html" },
+    { "source": "/admin/login", "destination": "/admin/login.html" },
+    { "source": "/admin/editor", "destination": "/admin/editor.html" },
     { "source": "/:slug([a-z0-9-]+)", "destination": "/api/page/:slug" }
   ]
 }

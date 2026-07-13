@@ -3,8 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LinkrTap</title>
-    <link rel="stylesheet" href="styles.css" />
+    <title>LinkrTap Editor</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/admin/dashboard.css" />
   </head>
   <body>
     <main class="app-shell">
@@ -17,6 +18,8 @@
               <h1>Business page builder</h1>
             </div>
           </div>
+
+          <p style="margin: -10px 0 18px;"><a href="/admin" style="color: var(--accent-dark); font-weight: 800; font-size: 13px;">&larr; Back to dashboard</a></p>
 
           <form id="businessForm" class="editor-form">
             <label>
@@ -114,18 +117,44 @@
 
           <aside class="qr-panel" aria-label="QR preview">
             <p class="eyebrow">QR preview</p>
-            <img id="qrImage" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https%3A%2F%2Flinkrtap.local%2Fcafe-aroma" alt="QR code preview" />
-            <p id="shortUrl">linkrtap.local/cafe-aroma</p>
+            <img id="qrImage" src="" alt="QR code preview" />
+
+            <div class="share-links">
+              <div>
+                <p class="label">Share this link (tracked)</p>
+                <p id="shareUrl">Not published yet</p>
+                <button id="copyShareLink" class="download-button" type="button" style="display:none;min-height:36px;margin-top:6px;">Copy link</button>
+              </div>
+              <div>
+                <p class="label">Admin preview (untracked — don't share)</p>
+                <a id="previewLink" class="live-link" href="#" target="_blank" rel="noopener" style="display:none"></a>
+              </div>
+            </div>
+
             <button id="downloadQr" class="download-button" type="button">Download QR</button>
             <p id="downloadStatus" class="download-status" aria-live="polite"></p>
             <button id="publishButton" class="download-button publish-button" type="button">Publish page</button>
             <p id="publishStatus" class="download-status" aria-live="polite"></p>
-            <a id="liveLink" class="live-link" href="#" target="_blank" rel="noopener" style="display:none"></a>
+
+            <div id="analyticsPanel" class="analytics-panel" style="display:none">
+              <p class="eyebrow">Analytics</p>
+              <div class="analytics-grid">
+                <div class="analytics-stat">
+                  <div id="statVisits" class="value">0</div>
+                  <div class="label">Scans/visits</div>
+                </div>
+                <div class="analytics-stat">
+                  <div id="statUniques" class="value">0</div>
+                  <div class="label">Unique (14d)</div>
+                </div>
+              </div>
+              <div id="clicksBreakdown" class="analytics-breakdown"></div>
+            </div>
           </aside>
         </section>
       </section>
     </main>
 
-    <script src="app.js"></script>
+    <script src="/admin/editor.js"></script>
   </body>
 </html>

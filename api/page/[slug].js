@@ -12,14 +12,9 @@ function escapeHtml(value) {
   })[ch]);
 }
 
-function actionButton(href, label, extraClass = "") {
+function actionButton(slug, action, href, label, extraClass = "") {
   if (!href) return "";
-  return `<a class="action-button ${extraClass}" href="${escapeHtml(href)}" target="_blank" rel="noopener">${escapeHtml(label)}</a>`;
-}
-
-function phoneHref(value) {
-  const digits = String(value || "").replace(/[^\d+]/g, "");
-  return digits ? `tel:${digits}` : "";
+  return `<a class="action-button ${extraClass}" href="/api/click/${encodeURIComponent(slug)}/${action}" target="_blank" rel="noopener">${escapeHtml(label)}</a>`;
 }
 
 export default async function handler(req, res) {
@@ -36,7 +31,7 @@ export default async function handler(req, res) {
     : `<div class="business-logo">${escapeHtml((record.initials || record.name.slice(0, 2)).toUpperCase())}</div>`;
 
   const phoneButton = record.phone
-    ? `<a class="action-button" href="${phoneHref(record.phone)}">Call</a>`
+    ? `<a class="action-button" href="/api/click/${encodeURIComponent(slug)}/phone">Call</a>`
     : "";
 
   const html = `<!doctype html>
@@ -62,12 +57,12 @@ export default async function handler(req, res) {
           <p class="description">${escapeHtml(record.description || "")}</p>
         </div>
         <div class="action-list">
-          ${actionButton(record.review, "Leave Review", "primary")}
-          ${actionButton(record.instagram, "Instagram")}
-          ${actionButton(record.whatsapp, "WhatsApp")}
-          ${actionButton(record.menu, "Menu")}
-          ${actionButton(record.website, "Website")}
-          ${actionButton(record.directions, "Directions")}
+          ${actionButton(slug, "review", record.review, "Leave Review", "primary")}
+          ${actionButton(slug, "instagram", record.instagram, "Instagram")}
+          ${actionButton(slug, "whatsapp", record.whatsapp, "WhatsApp")}
+          ${actionButton(slug, "menu", record.menu, "Menu")}
+          ${actionButton(slug, "website", record.website, "Website")}
+          ${actionButton(slug, "directions", record.directions, "Directions")}
           ${phoneButton}
         </div>
         <p class="powered">Powered by LinkrTap</p>

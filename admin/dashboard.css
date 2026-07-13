@@ -1,0 +1,146 @@
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 900px;
+  margin: 0 auto 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.dashboard-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.dashboard-actions a,
+.dashboard-actions button {
+  display: grid;
+  place-items: center;
+  width: auto;
+  min-height: 40px;
+  padding: 0 16px;
+  margin-top: 0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.business-list {
+  max-width: 900px;
+  margin: 0 auto;
+  display: grid;
+  gap: 12px;
+}
+
+.business-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px 20px;
+  box-shadow: var(--shadow);
+}
+
+.business-card h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.business-card-meta {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.business-card-stats {
+  margin: 0;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.business-card-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.business-card-actions a {
+  font-weight: 800;
+  color: var(--accent-dark);
+}
+
+.analytics-panel {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.analytics-stat {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.analytics-stat .value {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--accent-dark);
+}
+
+.analytics-stat .label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.analytics-breakdown {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.analytics-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  color: #31343a;
+}
+
+.analytics-breakdown-row span:last-child {
+  font-weight: 800;
+}
+
+.share-links {
+  margin-top: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.share-links .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.preview-note {
+  font-size: 11px;
+  color: var(--muted);
+}

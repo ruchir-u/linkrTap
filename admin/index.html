@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LinkrTap Admin</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/admin/dashboard.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <div class="dashboard-header">
+        <div class="brand-row">
+          <div class="brand-mark">L</div>
+          <div>
+            <p class="eyebrow">LinkrTap</p>
+            <h1>Businesses</h1>
+          </div>
+        </div>
+        <div class="dashboard-actions">
+          <a class="download-button publish-button" href="/admin/editor">+ New business</a>
+          <button id="logoutButton" class="download-button" type="button">Log out</button>
+        </div>
+      </div>
+
+      <div id="businessList" class="business-list">
+        <p>Loading...</p>
+      </div>
+    </main>
+
+    <script src="/admin/dashboard.js"></script>
+  </body>
+</html>
