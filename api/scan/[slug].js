@@ -11,10 +11,12 @@ import {
 const kv = Redis.fromEnv();
 
 export default async function handler(req, res) {
-  const { slug } = req.query;
+  const { slug: scannedId, src } = req.query;
+  const qr = await kv.get(`qr:${scannedId}`);
+  const slug = qr?.slug || scannedId;
   const record = await kv.get(`business:${slug}`);
 
-  if (!record) {
+  if (!record || record.status === "archived" || record.status === "disabled" || (qr && qr.status !== "active")) {
     res.status(404).send("This LinkrTap page doesn't exist (yet).");
     return;
   }
@@ -22,11 +24,14 @@ export default async function handler(req, res) {
   const ip = getClientIp(req);
   const ipHash = hashIp(ip);
   const device = classifyDevice(req.headers["user-agent"]);
-  const source = classifySource(req.headers["referer"] || req.headers["referrer"]);
+  const explicitSource = ["instagram", "whatsapp", "facebook", "google", "twitter", "other", "direct"].includes(String(src))
+    ? String(src)
+    : null;
+  const source = explicitSource || classifySource(req.headers["referer"] || req.headers["referrer"]);
   const date = todayKey();
 
   if (device !== "bot") {
-    const allowed = await checkRateLimit(kv, `ratelimit:visit:${slug}:${ipHash}`, 30);
+    const allowed = await checkRateLimit(kv, `ratelimit:visit:${slug}:${ipHash}`, 5);
 
     if (allowed) {
       await Promise.all([
@@ -36,6 +41,10 @@ export default async function handler(req, res) {
         kv.incr(`stats:${slug}:devices:${device}`),
         kv.sadd(`stats:${slug}:uniques:${date}`, ipHash),
         kv.set(`stats:${slug}:lastVisit`, new Date().toISOString()),
+        qr ? kv.incr(`qr:${qr.qrId}:scans:total`) : Promise.resolve(),
+        qr ? kv.set(`qr:${qr.qrId}:lastScannedAt`, new Date().toISOString()) : Promise.resolve(),
+        kv.expire(`stats:${slug}:visits:daily:${date}`, 60 * 60 * 24 * 90),
+        kv.expire(`stats:${slug}:uniques:${date}`, 60 * 60 * 24 * 90),
       ]);
     }
   }

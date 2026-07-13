@@ -47,7 +47,12 @@ export function classifyDevice(userAgent) {
 }
 
 export function todayKey() {
-  return new Date().toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 }
 
 export function lastNDates(n) {
@@ -55,7 +60,14 @@ export function lastNDates(n) {
   for (let i = n - 1; i >= 0; i -= 1) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    dates.push(d.toISOString().slice(0, 10));
+    dates.push(
+      new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Kolkata",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(d)
+    );
   }
   return dates;
 }

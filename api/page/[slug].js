@@ -21,7 +21,7 @@ export default async function handler(req, res) {
   const { slug } = req.query;
   const record = await kv.get(`business:${slug}`);
 
-  if (!record) {
+  if (!record || record.status === "archived" || record.status === "disabled") {
     res.status(404).send("<!doctype html><h1>This LinkrTap page doesn't exist (yet).</h1>");
     return;
   }

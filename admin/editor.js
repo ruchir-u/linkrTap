@@ -4,6 +4,8 @@ const fields = {
   rating: document.querySelector("#ratingInput"),
   city: document.querySelector("#cityInput"),
   initials: document.querySelector("#initialsInput"),
+  qrId: document.querySelector("#qrIdInput"),
+  stickerNumber: document.querySelector("#stickerNumberInput"),
   logo: document.querySelector("#logoInput"),
   review: document.querySelector("#reviewInput"),
   instagram: document.querySelector("#instagramInput"),
@@ -45,6 +47,7 @@ let uploadedLogoUrl = "";
 let currentQrUrl = "";
 let currentQrFileName = "linkrtap-qr.png";
 let currentSlug = "";
+let currentQrId = "";
 let publishedShareUrl = "";
 let publishedPreviewUrl = "";
 
@@ -106,7 +109,8 @@ function updatePreview() {
     preview.publishStatus.textContent = "Unpublished changes. Publish again to update the live page.";
   }
 
-  const qrTargetUrl = publishedShareUrl || `${window.location.origin}/api/scan/${slug}`;
+  const qrId = fields.qrId.value.trim() || currentQrId || `qr-${slug}`;
+  const qrTargetUrl = publishedShareUrl || `${window.location.origin}/api/scan/${qrId}`;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=900x900&format=png&data=${encodeURIComponent(qrTargetUrl)}`;
   currentQrUrl = qrUrl;
   currentQrFileName = `${slug}-linkrtap-qr.png`;
@@ -144,9 +148,11 @@ async function loadAnalytics(slug) {
   }
 }
 
-function applyPublishedState(slug) {
+function applyPublishedState(slug, qrId) {
   currentSlug = slug;
-  publishedShareUrl = `${window.location.origin}/api/scan/${slug}`;
+  currentQrId = qrId || `qr-${slug}`;
+  fields.qrId.value = currentQrId;
+  publishedShareUrl = `${window.location.origin}/api/scan/${currentQrId}`;
   publishedPreviewUrl = `${window.location.origin}/${slug}`;
 
   preview.shareUrl.textContent = publishedShareUrl.replace(/^https?:\/\//, "");
@@ -169,6 +175,8 @@ async function loadExistingBusiness(slug) {
     fields.rating.value = record.rating || "";
     fields.city.value = record.city || "";
     fields.initials.value = record.initials || "";
+    fields.qrId.value = record.qrId || "";
+    fields.stickerNumber.value = record.stickerNumber || "";
     fields.review.value = record.review || "";
     fields.instagram.value = record.instagram || "";
     fields.whatsapp.value = record.whatsapp || "";
@@ -178,7 +186,7 @@ async function loadExistingBusiness(slug) {
     fields.phone.value = record.phone || "";
     uploadedLogoUrl = record.logoUrl || "";
 
-    applyPublishedState(record.slug);
+    applyPublishedState(record.slug, record.qrId);
   } catch {
     // If loading fails, the form just stays on its defaults.
   }
@@ -246,7 +254,9 @@ preview.publishButton.addEventListener("click", async () => {
 
   const payload = {
     id: currentSlug,
-    slug: slugify(fields.name.value.trim() || "business"),
+    slug: currentSlug || slugify(fields.name.value.trim() || "business"),
+    qrId: fields.qrId.value.trim(),
+    stickerNumber: fields.stickerNumber.value.trim(),
     name: fields.name.value.trim(),
     description: fields.description.value.trim(),
     rating: fields.rating.value.trim(),
@@ -275,7 +285,7 @@ preview.publishButton.addEventListener("click", async () => {
     if (!response.ok) throw new Error(data.error || "Publish failed");
 
     preview.publishStatus.textContent = "Published.";
-    applyPublishedState(data.slug);
+    applyPublishedState(data.slug, data.qrId);
 
     // Reflect the (possibly disambiguated) slug in the URL without reloading.
     const newUrl = `${window.location.pathname}?slug=${encodeURIComponent(data.slug)}`;

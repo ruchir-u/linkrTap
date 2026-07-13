@@ -46,6 +46,7 @@ export default async function handler(req, res) {
       await Promise.all([
         kv.incr(`stats:${slug}:clicks:${field}:total`),
         kv.incr(`stats:${slug}:clicks:daily:${date}`),
+        kv.expire(`stats:${slug}:clicks:daily:${date}`, 60 * 60 * 24 * 90),
       ]);
     }
   }

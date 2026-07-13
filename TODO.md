@@ -16,6 +16,10 @@
 - [x] Add unique-visitor tracking (hashed IP, per-day Redis sets)
 - [x] Add rate limiting + bot filtering on scan/click endpoints
 - [x] Distinguish QR/direct visits from shared-link visits (referrer source)
+- [x] Use India time (IST) for daily analytics
+- [x] Add reusable permanent QR IDs, QR health status, and archive/disable controls
+- [x] Add explicit `?src=` campaign-source tracking
+- [x] Retain daily analytics detail for 90 days
 - [ ] Add logo image upload to real storage (Vercel Blob)
 - [ ] Add delete/archive flow for businesses in the dashboard
 - [ ] Deploy this version to Vercel (attach Upstash, set ADMIN_PASSWORD, redeploy)

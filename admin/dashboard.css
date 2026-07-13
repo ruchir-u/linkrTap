@@ -68,6 +68,13 @@
   font-weight: 800;
 }
 
+.business-card-health {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .business-card-actions {
   display: flex;
   gap: 16px;
@@ -77,6 +84,18 @@
   font-weight: 800;
   color: var(--accent-dark);
 }
+
+.business-card-actions .status-button {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--accent-dark);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+
+.business-card-actions .archive { color: #a23a3a; }
 
 .analytics-panel {
   margin-top: 18px;

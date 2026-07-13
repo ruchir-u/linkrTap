@@ -84,6 +84,21 @@ All counters live in Redis, incremented atomically on each request:
 Hit `/api/analytics/<slug>` (while logged in) to see it all assembled into
 one JSON response.
 
+## QR operations
+
+Each published business has a permanent QR ID (for example `qr-001`). The
+printed QR points to `/api/scan/qr-001`, while the QR ID maps to the currently
+assigned business. You can therefore rename a business without reprinting its
+sticker, or reassign the QR ID to a new business; its former business is
+archived automatically. The dashboard flags active QRs that have not been
+scanned recently and lets you disable, reactivate, or archive a business.
+
+Daily scan, unique-visitor, and click keys use `Asia/Kolkata` dates and expire
+after 90 days. Lifetime totals remain available. When sharing a link digitally,
+append `?src=whatsapp`, `?src=instagram`, `?src=google`, `?src=facebook`, or
+`?src=twitter` to record its source explicitly; this takes precedence over the
+browser referrer.
+
 ## Deploying
 
 1. `vercel link` (or `vercel` interactively) to create/connect the project.
