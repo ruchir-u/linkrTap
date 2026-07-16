@@ -79,7 +79,7 @@ All counters live in Redis, incremented atomically on each request:
 
 **Integrity measures**, since this data gets sold to clients:
 - Rate limiting: repeat hits from the same IP within a short cooldown
-  (30s for visits, 10s for clicks on the same action) aren't double-counted.
+  (5s for visits, 10s for clicks on the same action) aren't double-counted.
 - Bot filtering: requests with a bot-like User-Agent (curl, crawlers, etc.)
   aren't counted at all.
 - Unique visitor counts are deduplicated by hashed IP per day, so
@@ -115,8 +115,10 @@ browser referrer.
    This sets `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`
    automatically.
 3. In the Vercel dashboard: Storage → **Blob** → Create → connect it to
-   this project. This sets `BLOB_READ_WRITE_TOKEN` automatically, which
-   `api/admin/upload-logo.js` needs for logo uploads.
+   this project. Vercel authenticates blob uploads at runtime via OIDC
+   plus `BLOB_STORE_ID` (both set automatically once connected) — no
+   manual token needed. `api/admin/upload-logo.js` uses this to store
+   logos.
 4. In Vercel → Settings → Environment Variables, add `ADMIN_PASSWORD`
    yourself (this one isn't auto-set by anything).
 5. For local dev: `vercel env pull .env.local`, then `vercel dev`.

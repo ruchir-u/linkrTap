@@ -17,7 +17,12 @@ export default async function handler(req, res) {
     return;
   }
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  // Newer Blob store connections authenticate via short-lived OIDC tokens
+  // (injected at runtime, not visible as a static env var) plus
+  // BLOB_STORE_ID, rather than the older long-lived BLOB_READ_WRITE_TOKEN.
+  // Either credential path is valid, so check for whichever is present
+  // instead of hard-requiring the older one.
+  if (!process.env.BLOB_STORE_ID && !process.env.BLOB_READ_WRITE_TOKEN) {
     res.status(500).json({ error: "Blob storage isn't connected on the server yet." });
     return;
   }
@@ -63,6 +68,11 @@ export default async function handler(req, res) {
     res.status(200).json({ ok: true, url: blob.url });
   } catch (error) {
     console.error("upload-logo error", error);
-    res.status(500).json({ error: "Failed to upload logo" });
+    const authIssue = /token|credential|unauthorized|oidc|BLOB_STORE_ID/i.test(error.message || "");
+    res.status(500).json({
+      error: authIssue
+        ? "Blob storage rejected the upload — check the store is connected to this project and redeploy."
+        : "Failed to upload logo",
+    });
   }
 }
