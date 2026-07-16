@@ -6,6 +6,7 @@
   "description": "LinkrTap - one QR code, one business profile page, with tracked analytics.",
   "dependencies": {
     "@upstash/redis": "^1.34.0",
+    "@vercel/blob": "^2.6.1",
     "@vercel/functions": "^1.5.0"
   }
 }

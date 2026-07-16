@@ -20,7 +20,7 @@
 - [x] Add reusable permanent QR IDs, QR health status, and archive/disable controls
 - [x] Add explicit `?src=` campaign-source tracking
 - [x] Retain daily analytics detail for 90 days
-- [ ] Add logo image upload to real storage (Vercel Blob)
+- [x] Add logo image upload to real storage (Vercel Blob)
 - [ ] Add delete/archive flow for businesses in the dashboard
 - [ ] Deploy this version to Vercel (attach Upstash, set ADMIN_PASSWORD, redeploy)
 - [ ] Test end-to-end: log in, publish a business, scan the QR, tap buttons, confirm analytics update

@@ -40,6 +40,10 @@ Visiting `/` redirects to `/admin`.
 - `api/admin-login.js` / `api/admin-logout.js` — set/clear the auth cookie.
   These two stay public on purpose (the login page has to be reachable).
 - `api/save.js` — `POST`, validates and saves a business record to Redis.
+- `api/admin/upload-logo.js` — `POST`, uploads a business logo to Vercel
+  Blob (client resizes/compresses to a PNG/JPEG under 3MB first) and
+  returns its public URL, which then gets saved as `logoUrl` via
+  `/api/save`.
 - `api/business/[slug].js` — `GET` a single business record as JSON.
 - `api/admin/businesses.js` — `GET` all published businesses with quick
   stats, for the dashboard.
@@ -89,9 +93,13 @@ one JSON response.
 Each published business has a permanent QR ID (for example `qr-001`). The
 printed QR points to `/api/scan/qr-001`, while the QR ID maps to the currently
 assigned business. You can therefore rename a business without reprinting its
-sticker, or reassign the QR ID to a new business; its former business is
-archived automatically. The dashboard flags active QRs that have not been
-scanned recently and lets you disable, reactivate, or archive a business.
+sticker, or reassign the QR ID to a new business — its former business is
+archived. Since that archives a live page, `/api/save` refuses to do this
+silently: if the QR ID you're publishing to is already assigned elsewhere, it
+responds `409` with the former business's name, and the editor asks you to
+confirm before resubmitting with `confirmReassign: true`. The dashboard flags
+active QRs that have not been scanned recently and lets you disable,
+reactivate, or archive a business.
 
 Daily scan, unique-visitor, and click keys use `Asia/Kolkata` dates and expire
 after 90 days. Lifetime totals remain available. When sharing a link digitally,
@@ -106,16 +114,16 @@ browser referrer.
    **Upstash** → Create → choose Redis, and connect it to this project.
    This sets `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`
    automatically.
-3. In Vercel → Settings → Environment Variables, add `ADMIN_PASSWORD`
+3. In the Vercel dashboard: Storage → **Blob** → Create → connect it to
+   this project. This sets `BLOB_READ_WRITE_TOKEN` automatically, which
+   `api/admin/upload-logo.js` needs for logo uploads.
+4. In Vercel → Settings → Environment Variables, add `ADMIN_PASSWORD`
    yourself (this one isn't auto-set by anything).
-4. For local dev: `vercel env pull .env.local`, then `vercel dev`.
-5. `vercel --prod` to deploy.
+5. For local dev: `vercel env pull .env.local`, then `vercel dev`.
+6. `vercel --prod` to deploy.
 
 ## Known gaps
 
-- Logo image upload is local-preview only (a `blob:` URL) — it never
-  reaches the server, so published pages fall back to initials. Needs real
-  image hosting (e.g. Vercel Blob).
 - No delete flow for businesses yet — `/api/admin/businesses` lists them,
   but there's no way to remove one.
 - No client-facing report view — analytics are for you, viewed in

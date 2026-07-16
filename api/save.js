@@ -46,6 +46,27 @@ export default async function handler(req, res) {
     const assignedQr = await kv.get(`qr:${qrId}`);
     const now = new Date().toISOString();
 
+    // Reassigning a physical QR to this business would archive whoever it's
+    // currently assigned to. That's a real, semi-destructive action (their
+    // page goes dark), so it needs an explicit, informed confirmation rather
+    // than happening silently as a side effect of hitting Publish. Bail out
+    // BEFORE any writes happen if this hasn't been confirmed yet, and hand
+    // back enough detail for the client to ask the person directly.
+    const reassignTarget = assignedQr?.slug && assignedQr.slug !== slug ? assignedQr.slug : null;
+
+    if (reassignTarget && body.confirmReassign !== true) {
+      const former = await kv.get(`business:${reassignTarget}`);
+      res.status(409).json({
+        error: "qr_reassign_confirmation_required",
+        conflict: {
+          qrId,
+          formerSlug: reassignTarget,
+          formerName: former?.name || reassignTarget,
+        },
+      });
+      return;
+    }
+
     const record = {
       id: prior?.id || slug,
       slug,
@@ -73,11 +94,24 @@ export default async function handler(req, res) {
       await kv.set(`qr:${prior.qrId}`, { ...previousQr, status: "unassigned", slug: null, owner: null, updatedAt: now });
     }
 
-    // Reassigning a physical QR intentionally archives its former business;
-    // the new business receives its own fresh per-slug analytics.
-    if (assignedQr?.slug && assignedQr.slug !== slug) {
-      const former = await kv.get(`business:${assignedQr.slug}`);
-      if (former) await kv.set(`business:${assignedQr.slug}`, { ...former, status: "archived", updatedAt: now });
+    // Defense in depth: this save is an update to a known prior record, but
+    // the resolved slug doesn't match where that record actually lives. If
+    // we just write to the new slug here, the old business:{prior.slug} key
+    // never gets touched — it lingers in Redis and in businesses:index as an
+    // orphaned duplicate. Since this genuinely is the same business (we have
+    // its prior record), migrate it: delete the stale key/index entry rather
+    // than leaving it behind.
+    if (prior?.slug && prior.slug !== slug) {
+      await kv.del(`business:${prior.slug}`);
+      await kv.srem("businesses:index", prior.slug);
+    }
+
+    // Reassigning a physical QR intentionally archives its former business
+    // (now confirmed, above); the new business receives its own fresh
+    // per-slug analytics.
+    if (reassignTarget) {
+      const former = await kv.get(`business:${reassignTarget}`);
+      if (former) await kv.set(`business:${reassignTarget}`, { ...former, status: "archived", updatedAt: now });
     }
 
     await kv.set(`business:${slug}`, record);

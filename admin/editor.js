@@ -22,6 +22,7 @@ const preview = {
   rating: document.querySelector("#previewRating"),
   city: document.querySelector("#previewCity"),
   logo: document.querySelector("#previewLogo"),
+  logoStatus: document.querySelector("#logoStatus"),
   review: document.querySelector("#reviewLink"),
   instagram: document.querySelector("#instagramLink"),
   whatsapp: document.querySelector("#whatsappLink"),
@@ -44,6 +45,8 @@ const preview = {
 };
 
 let uploadedLogoUrl = "";
+let localLogoPreviewUrl = "";
+let logoUploadInFlight = false;
 let currentQrUrl = "";
 let currentQrFileName = "linkrtap-qr.png";
 let currentSlug = "";
@@ -69,6 +72,61 @@ function slugify(value) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "") || "business"
   );
+}
+
+// Downscales/recompresses the chosen file client-side before it's sent to
+// the server, so a phone-camera photo doesn't blow past the upload limit.
+// Resolves to { blob, contentType } with dimensions capped at maxDim.
+function compressLogoImage(file, maxDim = 512, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = () => {
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const width = Math.max(1, Math.round(img.width * scale));
+      const height = Math.max(1, Math.round(img.height * scale));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(objectUrl);
+
+      // PNGs with transparency (logos on a clear background) need to stay
+      // PNG; everything else gets recompressed as JPEG to shrink further.
+      const outputType = file.type === "image/png" ? "image/png" : "image/jpeg";
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error("Could not process image"));
+            return;
+          }
+          resolve({ blob, contentType: outputType });
+        },
+        outputType,
+        outputType === "image/jpeg" ? quality : undefined
+      );
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Could not read image"));
+    };
+
+    img.src = objectUrl;
+  });
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+    reader.onerror = () => reject(new Error("Could not encode image"));
+    reader.readAsDataURL(blob);
+  });
 }
 
 function phoneHref(value) {
@@ -164,10 +222,31 @@ function applyPublishedState(slug, qrId) {
   loadAnalytics(slug);
 }
 
+// If loading an existing business fails, currentSlug must NOT silently stay
+// empty — that would make the form look like a fresh "create" screen, and
+// publishing from it would create a brand-new duplicate record instead of
+// updating the one the user thinks they're editing (leaving the original
+// orphaned in Redis and on the dashboard). So on failure we lock the form
+// instead of letting it masquerade as blank/new.
+function lockFormWithLoadError(message) {
+  preview.publishButton.disabled = true;
+  preview.publishStatus.textContent = message;
+  preview.publishStatus.style.color = "#c0392b";
+}
+
 async function loadExistingBusiness(slug) {
   try {
     const response = await fetch(`/api/business/${encodeURIComponent(slug)}`);
-    if (!response.ok) return;
+
+    if (!response.ok) {
+      lockFormWithLoadError(
+        response.status === 404
+          ? "Could not find this business (it may have been deleted or renamed). Reload the dashboard rather than publishing from here."
+          : "Could not load this business (server error). Reload the page before publishing."
+      );
+      return;
+    }
+
     const record = await response.json();
 
     fields.name.value = record.name || "";
@@ -188,7 +267,9 @@ async function loadExistingBusiness(slug) {
 
     applyPublishedState(record.slug, record.qrId);
   } catch {
-    // If loading fails, the form just stays on its defaults.
+    // Network error, JSON parse failure, etc. — same reasoning as above:
+    // fail loudly and block publishing rather than defaulting to blank/new.
+    lockFormWithLoadError("Could not load this business (connection issue). Reload the page before publishing.");
   }
 }
 
@@ -198,17 +279,74 @@ Object.values(fields).forEach((field) => {
   }
 });
 
-fields.logo.addEventListener("change", () => {
+fields.logo.addEventListener("change", async () => {
   const file = fields.logo.files[0];
 
   if (!file) {
+    if (localLogoPreviewUrl) URL.revokeObjectURL(localLogoPreviewUrl);
+    localLogoPreviewUrl = "";
     uploadedLogoUrl = "";
+    preview.logoStatus.textContent = "";
     updatePreview();
     return;
   }
 
-  uploadedLogoUrl = URL.createObjectURL(file);
+  if (!["image/png", "image/jpeg"].includes(file.type)) {
+    preview.logoStatus.textContent = "Only PNG or JPEG images are supported.";
+    preview.logoStatus.style.color = "#c0392b";
+    fields.logo.value = "";
+    return;
+  }
+
+  // Show an instant local preview while the real upload happens in the
+  // background, so the UI doesn't feel like it's stalled.
+  if (localLogoPreviewUrl) URL.revokeObjectURL(localLogoPreviewUrl);
+  localLogoPreviewUrl = URL.createObjectURL(file);
+  uploadedLogoUrl = localLogoPreviewUrl;
   updatePreview();
+
+  preview.logoStatus.textContent = "Uploading logo...";
+  preview.logoStatus.style.color = "";
+  logoUploadInFlight = true;
+  preview.publishButton.disabled = true;
+
+  try {
+    const { blob, contentType } = await compressLogoImage(file);
+
+    if (blob.size > 3 * 1024 * 1024) {
+      throw new Error("Logo is too large even after compression (max 3MB).");
+    }
+
+    const dataBase64 = await blobToBase64(blob);
+    const slugForUpload = currentSlug || slugify(fields.name.value.trim() || "business");
+
+    const response = await fetch("/api/admin/upload-logo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug: slugForUpload, contentType, dataBase64 }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Upload failed");
+
+    // Swap the local blob: preview for the real hosted URL now that it's live.
+    if (localLogoPreviewUrl) URL.revokeObjectURL(localLogoPreviewUrl);
+    localLogoPreviewUrl = "";
+    uploadedLogoUrl = data.url;
+    preview.logoStatus.textContent = "Logo uploaded.";
+    preview.logoStatus.style.color = "";
+  } catch (error) {
+    // Keep the local preview so the user can still see what they picked,
+    // but don't pretend it's saved — publishing won't include a broken
+    // blob: URL (see the publish handler), so the page would just fall
+    // back to initials until the upload is retried.
+    preview.logoStatus.textContent = `${error.message || "Logo upload failed"}. The page will use initials instead until this is retried.`;
+    preview.logoStatus.style.color = "#c0392b";
+  } finally {
+    logoUploadInFlight = false;
+    preview.publishButton.disabled = false;
+    updatePreview();
+  }
 });
 
 preview.downloadQr.addEventListener("click", async () => {
@@ -248,10 +386,7 @@ preview.copyShareLink.addEventListener("click", async () => {
   }
 });
 
-preview.publishButton.addEventListener("click", async () => {
-  preview.publishStatus.textContent = "Publishing...";
-  preview.publishButton.disabled = true;
-
+async function submitPublish(confirmReassign = false) {
   const payload = {
     id: currentSlug,
     slug: currentSlug || slugify(fields.name.value.trim() || "business"),
@@ -262,8 +397,10 @@ preview.publishButton.addEventListener("click", async () => {
     rating: fields.rating.value.trim(),
     city: fields.city.value.trim(),
     initials: fields.initials.value.trim(),
-    // Uploaded logo previews are local blob: URLs and can't be sent to the
-    // server yet — real image hosting (e.g. Vercel Blob) is a follow-up.
+    // uploadedLogoUrl is only ever a real hosted URL once the upload above
+    // succeeds; a lingering blob: URL means the upload failed, so it's
+    // stripped here as a last-resort safety net (the page falls back to
+    // initials rather than publishing a dead local reference).
     logoUrl: uploadedLogoUrl.startsWith("blob:") ? "" : uploadedLogoUrl,
     review: fields.review.value.trim(),
     instagram: fields.instagram.value.trim(),
@@ -274,14 +411,49 @@ preview.publishButton.addEventListener("click", async () => {
     phone: fields.phone.value.trim(),
   };
 
-  try {
-    const response = await fetch("/api/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+  if (confirmReassign) payload.confirmReassign = true;
 
-    const data = await response.json();
+  const response = await fetch("/api/save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  return { response, data: await response.json() };
+}
+
+preview.publishButton.addEventListener("click", async () => {
+  if (logoUploadInFlight) {
+    preview.publishStatus.textContent = "Still uploading the logo — try publishing again in a moment.";
+    return;
+  }
+
+  preview.publishStatus.textContent = "Publishing...";
+  preview.publishButton.disabled = true;
+
+  try {
+    let { response, data } = await submitPublish();
+
+    // The QR ID being entered is currently assigned to a different,
+    // published business. Publishing here would silently archive that
+    // business's live page — so instead of doing that as a side effect,
+    // the server refused and told us who'd be affected. Ask before we
+    // resubmit with explicit confirmation.
+    if (response.status === 409 && data.error === "qr_reassign_confirmation_required") {
+      const { qrId, formerName } = data.conflict;
+      const confirmed = window.confirm(
+        `QR "${qrId}" is currently assigned to "${formerName}". Reassigning it here will archive that business's page (it'll stop being publicly reachable). Continue?`
+      );
+
+      if (!confirmed) {
+        preview.publishStatus.textContent = "Publish cancelled — QR ID was not reassigned.";
+        preview.publishButton.disabled = false;
+        return;
+      }
+
+      ({ response, data } = await submitPublish(true));
+    }
+
     if (!response.ok) throw new Error(data.error || "Publish failed");
 
     preview.publishStatus.textContent = "Published.";
