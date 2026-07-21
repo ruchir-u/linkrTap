@@ -2,7 +2,6 @@
 
 - [x] Create static MVP webpage
 - [x] Add editable business profile preview
-- [x] Add logo image support (local preview only, not persisted yet)
 - [x] Add QR preview
 - [x] Add QR download button
 - [x] Add database (Upstash Redis, via Vercel Marketplace)
@@ -21,7 +20,9 @@
 - [x] Add explicit `?src=` campaign-source tracking
 - [x] Retain daily analytics detail for 90 days
 - [x] Add logo image upload to real storage (Vercel Blob)
-- [ ] Add delete/archive flow for businesses in the dashboard
+- [x] Add detailed analytics view (14-day visit trend, source/device breakdown, total clicks, last-visit time) in `/admin/editor`
+- [x] Add archive/disable/reactivate flow for businesses (`api/admin/business-status.js`, dashboard buttons)
+- [ ] Add a true delete flow for businesses (archive/disable only hide/deactivate — nothing removes a record from Redis yet)
 - [ ] Deploy this version to Vercel (attach Upstash, set ADMIN_PASSWORD, redeploy)
 - [ ] Test end-to-end: log in, publish a business, scan the QR, tap buttons, confirm analytics update
 - [ ] Demo first real business

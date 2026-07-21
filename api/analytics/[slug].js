@@ -20,6 +20,7 @@ export default async function handler(req, res) {
     lastVisit,
     dailyVisitCounts,
     dailyUniqueCounts,
+    dailyClickCounts,
     clickCounts,
     sourceCounts,
     deviceCounts,
@@ -28,6 +29,7 @@ export default async function handler(req, res) {
     kv.get(`stats:${slug}:lastVisit`),
     Promise.all(dates.map((d) => kv.get(`stats:${slug}:visits:daily:${d}`))),
     Promise.all(uniqueKeys.map((k) => kv.scard(k))),
+    Promise.all(dates.map((d) => kv.get(`stats:${slug}:clicks:daily:${d}`))),
     Promise.all(ACTIONS.map((a) => kv.get(`stats:${slug}:clicks:${a}:total`))),
     Promise.all(SOURCES.map((s) => kv.get(`stats:${slug}:visits:bySource:${s}`))),
     Promise.all(DEVICES.map((d) => kv.get(`stats:${slug}:devices:${d}`))),
@@ -37,6 +39,7 @@ export default async function handler(req, res) {
     date,
     count: Number(dailyVisitCounts[i]) || 0,
     uniques: Number(dailyUniqueCounts[i]) || 0,
+    clicks: Number(dailyClickCounts[i]) || 0,
   }));
 
   const clicksByAction = {};

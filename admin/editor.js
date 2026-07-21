@@ -1,3 +1,14 @@
+const businessForm = document.querySelector("#businessForm");
+
+// Every field lives inside this <form>, but there's no submit button in
+// it — Publish lives outside, in the QR panel. Without this, hitting Enter
+// in any single-line input (name, rating, city, ...) triggers the browser's
+// default form submission: a full-page navigation that throws away
+// whatever was being typed.
+businessForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+});
+
 const fields = {
   name: document.querySelector("#nameInput"),
   description: document.querySelector("#descriptionInput"),
@@ -41,7 +52,12 @@ const preview = {
   analyticsPanel: document.querySelector("#analyticsPanel"),
   statVisits: document.querySelector("#statVisits"),
   statUniques: document.querySelector("#statUniques"),
+  statClicks: document.querySelector("#statClicks"),
+  statLastVisit: document.querySelector("#statLastVisit"),
+  dailyTrend: document.querySelector("#dailyTrend"),
   clicksBreakdown: document.querySelector("#clicksBreakdown"),
+  sourceBreakdown: document.querySelector("#sourceBreakdown"),
+  deviceBreakdown: document.querySelector("#deviceBreakdown"),
 };
 
 let uploadedLogoUrl = "";
@@ -63,6 +79,37 @@ const ACTION_LABELS = {
   directions: "Directions",
   phone: "Call",
 };
+
+const SOURCE_LABELS = {
+  direct: "Direct / QR",
+  instagram: "Instagram",
+  whatsapp: "WhatsApp",
+  facebook: "Facebook",
+  google: "Google",
+  twitter: "Twitter / X",
+  other: "Other links",
+};
+
+const DEVICE_LABELS = {
+  mobile: "Mobile",
+  tablet: "Tablet",
+  desktop: "Desktop",
+  unknown: "Unknown",
+  bot: "Bot (filtered)",
+};
+
+function relativeTime(isoString) {
+  if (!isoString) return "Never";
+  const diffMs = Date.now() - new Date(isoString).getTime();
+  const minutes = Math.floor(diffMs / 60000);
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return new Date(isoString).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
 
 function slugify(value) {
   return (
@@ -175,24 +222,45 @@ function updatePreview() {
   preview.qr.src = qrUrl;
 }
 
-function renderAnalytics(data) {
-  preview.analyticsPanel.style.display = "block";
-  preview.statVisits.textContent = data.visitsTotal ?? 0;
-  preview.statUniques.textContent = data.uniqueVisitors14d ?? 0;
-
-  const rows = Object.entries(data.clicksByAction || {})
+function breakdownRows(counts, labels) {
+  const rows = Object.entries(counts || {})
     .filter(([, count]) => count > 0)
     .sort((a, b) => b[1] - a[1])
     .map(
-      ([action, count]) => `
+      ([key, count]) => `
         <div class="analytics-breakdown-row">
-          <span>${ACTION_LABELS[action] || action}</span>
+          <span>${labels[key] || key}</span>
           <span>${count}</span>
         </div>`
     )
     .join("");
 
-  preview.clicksBreakdown.innerHTML = rows || `<p style="color:var(--muted);font-size:13px;">No clicks yet.</p>`;
+  return rows || `<p style="color:var(--muted);font-size:13px;">No data yet.</p>`;
+}
+
+function renderDailyTrend(dailyVisits) {
+  const max = Math.max(1, ...dailyVisits.map((d) => d.count));
+
+  preview.dailyTrend.innerHTML = dailyVisits
+    .map((d) => {
+      const heightPct = Math.max(4, Math.round((d.count / max) * 100));
+      const dateLabel = new Date(`${d.date}T00:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+      return `<div class="analytics-trend-bar${d.count === 0 ? " zero" : ""}" style="height:${heightPct}%" title="${dateLabel}: ${d.count} visit${d.count === 1 ? "" : "s"}, ${d.uniques} unique, ${d.clicks} click${d.clicks === 1 ? "" : "s"}"></div>`;
+    })
+    .join("");
+}
+
+function renderAnalytics(data) {
+  preview.analyticsPanel.style.display = "block";
+  preview.statVisits.textContent = data.visitsTotal ?? 0;
+  preview.statUniques.textContent = data.uniqueVisitors14d ?? 0;
+  preview.statClicks.textContent = data.totalClicks ?? 0;
+  preview.statLastVisit.textContent = relativeTime(data.lastVisit);
+
+  renderDailyTrend(data.dailyVisits || []);
+  preview.clicksBreakdown.innerHTML = breakdownRows(data.clicksByAction, ACTION_LABELS);
+  preview.sourceBreakdown.innerHTML = breakdownRows(data.visitsBySource, SOURCE_LABELS);
+  preview.deviceBreakdown.innerHTML = breakdownRows(data.visitsByDevice, DEVICE_LABELS);
 }
 
 async function loadAnalytics(slug) {

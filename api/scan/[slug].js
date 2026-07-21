@@ -34,15 +34,22 @@ export default async function handler(req, res) {
     const allowed = await checkRateLimit(kv, `ratelimit:visit:${slug}:${ipHash}`, 5);
 
     if (allowed) {
+      const scanTime = new Date().toISOString();
+
       await Promise.all([
         kv.incr(`stats:${slug}:visits:total`),
         kv.incr(`stats:${slug}:visits:daily:${date}`),
         kv.incr(`stats:${slug}:visits:bySource:${source}`),
         kv.incr(`stats:${slug}:devices:${device}`),
         kv.sadd(`stats:${slug}:uniques:${date}`, ipHash),
-        kv.set(`stats:${slug}:lastVisit`, new Date().toISOString()),
+        kv.set(`stats:${slug}:lastVisit`, scanTime),
         qr ? kv.incr(`qr:${qr.qrId}:scans:total`) : Promise.resolve(),
-        qr ? kv.set(`qr:${qr.qrId}:lastScannedAt`, new Date().toISOString()) : Promise.resolve(),
+        // The dashboard reads lastScannedAt as a field on the qr:{qrId}
+        // object itself (see api/admin/businesses.js), not from a separate
+        // key — writing it standalone here meant it was never actually
+        // picked up, so the dashboard always showed "never scanned" no
+        // matter how many real scans happened.
+        qr ? kv.set(`qr:${qr.qrId}`, { ...qr, lastScannedAt: scanTime }) : Promise.resolve(),
         kv.expire(`stats:${slug}:visits:daily:${date}`, 60 * 60 * 24 * 90),
         kv.expire(`stats:${slug}:uniques:${date}`, 60 * 60 * 24 * 90),
       ]);

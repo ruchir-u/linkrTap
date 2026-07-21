@@ -47,6 +47,10 @@ Visiting `/` redirects to `/admin`.
 - `api/business/[slug].js` — `GET` a single business record as JSON.
 - `api/admin/businesses.js` — `GET` all published businesses with quick
   stats, for the dashboard.
+- `api/admin/business-status.js` — `POST { slug, status }`, sets a
+  business (and its assigned QR, if any) to `active`, `disabled`, or
+  `archived`. Powers the Disable/Activate/Archive buttons on the
+  dashboard.
 - `api/page/[slug].js` — server-rendered public business page.
 - `api/scan/[slug].js` — canonical tracked entry point (see above).
 - `api/click/[slug]/[action].js` — click-tracking redirect (see above).
@@ -74,8 +78,11 @@ All counters live in Redis, incremented atomically on each request:
 - `stats:{slug}:uniques:{date}` — a Redis set of hashed IPs per day, used
   to compute unique visitor counts without storing raw IPs.
 - `stats:{slug}:lastVisit` — ISO timestamp of the most recent visit.
-- `stats:{slug}:clicks:{action}:total` / `:daily:{date}` — click counts per
-  action button and per day.
+- `stats:{slug}:clicks:{action}:total` — lifetime click counts per action
+  button (`review`, `instagram`, `whatsapp`, `menu`, `website`,
+  `directions`, `phone`).
+- `stats:{slug}:clicks:daily:{date}` — total clicks across all action
+  buttons combined, per day (not broken down by action per day).
 
 **Integrity measures**, since this data gets sold to clients:
 - Rate limiting: repeat hits from the same IP within a short cooldown

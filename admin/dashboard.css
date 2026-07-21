@@ -159,6 +159,36 @@
   font-weight: 800;
 }
 
+.analytics-subhead {
+  margin: 16px 0 6px;
+  color: #31343a;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.analytics-trend {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 56px;
+  padding-top: 4px;
+}
+
+.analytics-trend-bar {
+  flex: 1;
+  min-width: 4px;
+  min-height: 2px;
+  background: var(--accent);
+  border-radius: 2px 2px 0 0;
+  cursor: default;
+}
+
+.analytics-trend-bar.zero {
+  background: var(--line);
+}
+
 .preview-note {
   font-size: 11px;
   color: var(--muted);

@@ -72,7 +72,11 @@ export default async function handler(req, res) {
       slug,
       qrId,
       stickerNumber: String(body.stickerNumber || prior?.stickerNumber || qrId.replace(/^qr-/, "")),
-      status: "active",
+      // Editing and republishing a business (e.g. fixing a typo) shouldn't
+      // silently undo a disable/archive done separately via the dashboard.
+      // Status only changes here through the reassignment-archive path
+      // below, or explicitly via /api/admin/business-status.
+      status: prior?.status || "active",
       name,
       description: String(body.description || ""),
       rating: String(body.rating || ""),
